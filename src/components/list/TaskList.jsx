@@ -60,7 +60,7 @@ const TaskList = ({ showSettings, setShowSettings }) => {
   return (
     <>
       <header className="flex justify-between">
-        <h1 className="text-3xl text-cyan-600 font-semibold dark:text-sky-300">Task List</h1>
+        <h1 className="text-3xl text-cyan-600 font-semibold dark:text-sky-300">Task List - hosted on: firebase v2</h1>
         <motion.button whileHover={{ scale: 1.1 }} whileTap={{scale: 0.9}} className="btn" onClick={() => setShowSettings(!showSettings)} >{!showSettings ? "Show settings" : "Hide settings" }</motion.button>
       </header>
       <div className="my-4">
