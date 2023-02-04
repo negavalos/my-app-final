@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { addTask, getTasks, toggleComplete } from '../firebase/TaskControllers';
 
 /**
  * Componente que gestiona la lista de tareas
@@ -11,13 +12,23 @@ const TaskList = ({ showSettings, setShowSettings }) => {
   const [newTask, setNewTask] = useState('');
   const [taskList, setTaskList] = useState([]);
 
+  useEffect(() => {
+    getTasks()
+      .then((tasks) => setTaskList([...tasks]))
+      .catch(e => console.error(e));
+  }, []);
   /**
    * Añade una nueva tarea a la lista de tareas
    */
   const addNewTask = () => {
-    if ( newTask === "" ) return 
-    setTaskList([...taskList, { task: newTask, completed: false }]);
-    setNewTask("");
+    if ( newTask === "" ) return;
+    // vamos a añadir una nueva tarea a la base de datos
+    const task = { task: newTask, completed: false };
+    addTask(task)
+      .then(() =>{
+        //cuando se haya añadido todas dentro del esta tasklist
+        return setTaskList([...taskList, task]);
+      }).catch(e=>console.log(e)).finally(setNewTask(""));
   };
   
   /**
@@ -40,10 +51,16 @@ const TaskList = ({ showSettings, setShowSettings }) => {
    * @param {*} index
    */
   const toggleCompleteItem = (index) => {
-    const newTaskList = taskList;
-    newTaskList[index].completed = !newTaskList[index].completed;
-    console.log(newTaskList[index].completed);
-    setTaskList([...newTaskList]);
+    // const newTaskList = taskList;
+    let task = taskList.find(t => t.id === index);
+    // Todo Actualizar en la base de datos las tareas
+    toggleComplete(task).then(async () => {
+      const newtasklist = await getTasks();
+      return setTaskList([...newtasklist]);
+    }).catch(e=>console.log(e));
+    // todo cuando se haya actualizado -> mostraremos las tareas dentro del estado taskList
+    // newTaskList[index].completed = !newTaskList[index].completed;
+    // setTaskList([...newTaskList]);
   };
   /**
    * Editar el nombre de la nueva tarea
@@ -73,14 +90,16 @@ const TaskList = ({ showSettings, setShowSettings }) => {
                <ul>
                  {taskList.map((item, index) => (
                    <motion.li initial={{ x: "100vw" }} animate={{ x: 0 }} key={index}>
-                     <input 
-                       type="checkbox" 
-                      //  onClick={() => removeItem(index)}
-                       onClick={() => toggleCompleteItem(index)}
-                      //  onChange={() => ()}
-                       defaultChecked={item.completed}
-                     />
-                     <span className={`ml-2 text-gray-700 dark:text-slate-300 text-sm italic ${item.completed && "line-through"}`}>{ item.task }</span>
+                     <label className="cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        //  onClick={() => removeItem(index)}
+                        onClick={() => toggleCompleteItem(item.id)}
+                        //  onChange={() => ()}
+                        defaultChecked={item.completed}
+                      />
+                      <span className={`ml-2 text-gray-700 dark:text-slate-300 text-sm italic ${item.completed && "line-through"}`}>{ item.task }</span>
+                      </label>
                    </motion.li>
                          ))}
                </ul>
